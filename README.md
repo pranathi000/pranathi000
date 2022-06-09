@@ -4,3 +4,4 @@ For that random person surfing over my GITHUB ----> I'm pranathi from INDIA. I'v
 New😄 to github
 beginner in contribution and coding journey. 
 ![Pranathi's GitHub stats](https://github-readme-stats.vercel.app/api?username=pranathi000&theme=dark&show_icons=true)
+<button data-toggle-theme="dark,light" data-act-class="ACTIVECLASS"></button>
