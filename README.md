@@ -13,7 +13,9 @@ Having fun working with in github.
 Skills: PYTHON / HTML / CSS
 
 - 🔭 I’m currently working on this page 
-- 🌱 I’m currently learning PYTHON 
+- 🌱 Exploring more about PYTHON
+- 😃 Building in my basics in C and RUST
+-    My front end development skills are growing with time.
 
 
 [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg' alt='github' height='40'>](https://github.com/pranathi000)  [<img src='https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/instagram.svg' alt='instagram' height='40'>](https://www.instagram.com/pranathi__singaraju/)  
