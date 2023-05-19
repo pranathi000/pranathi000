@@ -1,0 +1,678 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Understanding a ray tracer</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-translucentGray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="1015b3b0-7393-4f57-85d7-c5472d48fd1b" class="page sans"><header><img class="page-cover-image" src="Understanding%20a%20ray%20tracer%201015b3b073934f5785d7c5472d48fd1b/300px-BallsRender.png" style="object-position:center 50%"/><div class="page-header-icon page-header-icon-with-cover"><span class="icon">🌈</span></div><h1 class="page-title">Understanding a ray tracer</h1></header><div class="page-body"><p id="223ecb88-2802-476d-9ab2-fc9d5acb33a1" class="">Have you ever wondered how graphics are being created? How do lighting effects take place?</p><p id="90ede398-84b5-4a63-b4e8-3d022f73c1ed" class="">Creating a photorealistic image through graphics can be easily done by ray tracing.</p><ul id="c8320eb8-6964-4eb4-9d70-96bdece2fffc" class="block-color-gray_background toggle"><li><details open=""><summary>Table of contents</summary><ul id="65ed7d00-91a6-416c-8e4e-3a6c98ffa86e" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b"><mark class="highlight-orange_background">Ray Tracing</mark></a></li></ul><ul id="ee9eef19-d8e8-4e35-abe6-1aa160c471e6" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Basic Tracing Concepts</a><ul id="09c70629-4826-499a-b6c7-5a744480c2e7" class="bulleted-list"><li style="list-style-type:circle"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Forward Ray Tracing</a></li></ul><ul id="7cadc3eb-1006-44b4-9c46-77ca1591019d" class="bulleted-list"><li style="list-style-type:circle"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Backward Ray Tracing</a></li></ul></li></ul><p id="873e5c38-7cab-4bfe-ab04-d5351b2e5518" class="">
+</p><ul id="1eb600f0-efde-481d-b8a4-f3948d5c5b29" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Determining the color of a ray</a></li></ul><ul id="699b5ebb-7606-49ad-8070-78e63137df77" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Understanding a PPM file</a><ul id="165358d2-ebc1-4335-aba8-47dc1e084f5b" class="bulleted-list"><li style="list-style-type:circle"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Error analysis in the code</a></li></ul></li></ul><ul id="eecc7a47-4318-4f94-9b6a-54b18ee64cfc" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Behavior of rays</a></li></ul><p id="88ecb624-e015-4fd0-9196-d18be847e6df" class="">
+</p><ul id="3f37963f-8138-410b-b9bd-6f1a5a300f9e" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/83037d057ed9497a9355a83162284a5a">Anti-aliasing effects</a><ul id="18467558-76aa-4ac4-9676-3494535873a1" class="bulleted-list"><li style="list-style-type:circle"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Why does this irregularity occur?</a></li></ul></li></ul><ul id="f651e274-a3ae-47fd-b9ae-8d744eb9dca2" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Supersampling</a></li></ul><ul id="d9d051b6-cf5a-4656-9c9b-9b22fab5ca76" class="bulleted-list"><li style="list-style-type:disc"><a href="https://www.notion.so/Understanding-a-ray-tracer-1015b3b073934f5785d7c5472d48fd1b">Conclusion</a></li></ul></details></li></ul><p id="c2a918ca-f775-4712-b7a3-2f939ec182ba" class="">
+</p><h1 id="2e5c3a65-549e-4506-a062-1ffd56dab431" class="">Ray Tracing</h1><p id="8f46830c-a042-4213-ac48-e6c21adc94f4" class="">Ray tracing is a lightning technique that adds an extra level of reality to the images. With the help of a ray tracer, we will be able to create images indistinguishable from real scenes. Creating an imaginary path of an object such as the circumference of a circle and emanating rays from the origin is our foremost task. If the rays strike the path of the object then the pixel is colored and the object is visible.</p><p id="4195447a-07df-4f64-92c2-bef51719c063" class="">We can also add shading and reflections to the object by many optical techniques. </p><p id="b18aa6cd-5133-40e9-aa65-ed8cbf0976d1" class="">This post only concentrates on how the ray tracer actually works and the techniques to build a perfect ray tracer. I will discuss core concepts and theoretical perspectives for a better understanding of code.</p><p id="68575b2c-9c79-4239-8416-d4d762e21cb3" class="block-color-orange">[ In my opinion ]</p><p id="d3b5ec2b-8e17-4885-9a85-ac926a6a646c" class="">the book named <strong><span style="border-bottom:0.05em solid">ray tracing in a Weekend</span></strong> is the perfect one for dealing with the code, but the book is only filled with code examples irrespective of theoretical explanation. Understanding the core concepts and the working mechanism of the ray tracer helps in the easier designing of code. </p><p id="286fe7b6-d9cb-48fa-841a-1cb57a444e70" class="">Some useful resources : </p><p id="3a9470f6-b3f9-47e4-bbf9-0fea070ec2dd" class=""><mark class="highlight-pink_background"><a href="https://books.google.co.in/books/about/An_Introduction_to_Ray_Tracing.html?id=YPblYyLqBM4C&amp;source=kp_book_description&amp;redir_esc=y"><em><strong><span style="border-bottom:0.05em solid">An introduction to ray tracing</span></strong></em></a></mark><mark class="highlight-gray"> </mark>includes different concepts and methods.</p><p id="f52aa90b-039b-4f1c-b388-c71b89d0542f" class=""><a href="https://raytracing.github.io/books/RayTracingInOneWeekend.html"><mark class="highlight-pink_background"><em><strong><span style="border-bottom:0.05em solid">Ray tracing in a weekend</span></strong></em></mark></a><mark class="highlight-pink_background"> </mark>contains many code-related examples and outcomes.</p><p id="145da830-9c07-46ed-b781-7664cffe8cc4" class=""><mark class="highlight-pink_background"><a href="https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-to-ray-tracing/how-does-it-work.html"><em><strong><span style="border-bottom:0.05em solid">Scratch a pixel for basics</span></strong></em></a></mark><em><strong> </strong></em>in graphic designing.</p><p id="760beab7-678a-4d0a-960c-eeb6d3b6a58b" class=""><a href="https://books.google.co.in/books/about/Physically_Based_Rendering.html?id=iNMVBQAAQBAJ&amp;source=kp_book_description&amp;redir_esc=y"><mark class="highlight-pink_background"><em><strong><span style="border-bottom:0.05em solid">Physically-based rendering</span></strong></em></mark></a><a href="https://books.google.co.in/books/about/Physically_Based_Rendering.html?id=iNMVBQAAQBAJ&amp;source=kp_book_description&amp;redir_esc=y"> </a>includes core concepts of advanced tracing algorithms.</p><h1 id="49c8dd26-9f45-4b3a-8c22-b25ed10654a0" class="">Basic tracing concepts</h1><p id="528ba7ff-c0f0-4eee-8961-df003b8fe24d" class="">There are two basic approaches accepted in ray tracing.</p><ol type="1" id="b84b80a9-ded4-40d8-b751-718dcad8a917" class="numbered-list" start="1"><li><em>Forward ray tracing</em></li></ol><ol type="1" id="41604406-d90b-43c9-8f7d-e3483159edd9" class="numbered-list" start="2"><li><em>Backward ray tracing</em></li></ol><h2 id="7c1e5867-123e-43f4-b79f-1a435f3c0681" class="">Forward ray tracing</h2><p id="0d21292e-eb66-444e-851d-1bc6cc741444" class="">A light source such as an LED bulb contains millions of light rays which are uncountable. And when the source is ON, the rays move in all directions. For suppose there are 3 objects in our imaginary scene. we cannot assure that all the light rays strike through the objects.</p><p id="50a7f0ca-43e3-476c-b7a9-617ec5368268" class="">The following scenarios may happen at this situation: </p><ul id="0c98bd34-bb35-4736-92f8-e6b3d0cbe4c3" class="bulleted-list"><li style="list-style-type:disc">some rays will hit the object.</li></ul><ul id="b737f608-ce24-401f-bffd-1bc1b338869a" class="bulleted-list"><li style="list-style-type:disc">Some of them may not at all hit the objects.</li></ul><p id="abb832c8-c00a-4fc0-867c-dee6b0e2a740" class="">Forward tracing in the sense says that every light ray originating from the source should be traced until we get a complete image. Likewise, tracing 1 million rays is impossible and time inconvenient. This actually happens in our real world but not in the graphical world.</p><h2 id="bd713c3d-baeb-43d3-9cf0-d6a6f42535b0" class="">Backward ray tracing</h2><p id="47a5798e-28c3-4a97-9161-dc3f6d4e5a10" class="">Instead of sending rays from the source, the rays will be sent from our eyes. The ray which hits the object gets colored and those bunch of hittable rays leads to a complete image.</p><figure id="1b3a2413-06d5-4f10-bfcc-261d43ca0bc0" class="image"><a href="Understanding%20a%20ray%20tracer%201015b3b073934f5785d7c5472d48fd1b/Screenshot_from_2023-05-18_10-15-28.png"><img style="width:288px" src="Understanding%20a%20ray%20tracer%201015b3b073934f5785d7c5472d48fd1b/Screenshot_from_2023-05-18_10-15-28.png"/></a></figure><p id="b7084479-5c26-4fb0-905c-4a3320e4ec26" class="">This is suitable due to less consumption of time so that we can code easily. This is the artificial way of analyzing an image. All the tracing phenomenon in computer graphics is done by backward tracing only and our further discussion of concepts rely on this effect only.</p><h1 id="6d355021-b25a-4857-937b-6af701a6ac33" class="">Determining the color of a ray</h1><p id="fd72819b-f678-46b5-a769-206dd372ae12" class="">The color of a ray will be defined by using a photon. Light ray consists of photons that travel in a straight line path. Every photons possess different energies and every energy is interlinked with a color. If that energy-related photon strikes our eye, then the object will be colored accordingly.</p><p id="39de0772-c1f2-47b0-8c5d-b5b65bfc13e2" class="">
+</p><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="9d66bac8-c730-4013-a771-faa1e054c801"><div style="font-size:1.5em"><span class="icon">💡</span></div><div style="width:100%"><strong>If </strong><em>two energies strike at a time, then the average of those colors will be chosen.</em></div></figure><p id="c1b30da3-3c05-461d-aedc-8dc3421f2858" class="">
+</p><h1 id="94f4a88e-0f83-4b9b-8630-e5e36ef08633" class="">A ppm file</h1><p id="5da92d4e-35db-4d7f-b251-649708dd2b63" class="block-color-blue">[A portable Pixmap format ]</p><ul id="edd978f1-6c92-4d4d-b57c-884ad0d5e792" class="bulleted-list"><li style="list-style-type:disc">PPMs are RGB file formats for representing images. It is an intermediate file format that stores image-related information before converting to a more organized format. </li></ul><ul id="4ffe66a2-787a-4100-95fa-24f0fcb6aa88" class="bulleted-list"><li style="list-style-type:disc">programmers make ppm files for reviewing their images easily when the code runs.</li></ul><ul id="1c327d05-92c1-4c3c-b655-7bfa54274dbb" class="bulleted-list"><li style="list-style-type:disc">ppm values now range from <span style="border-bottom:0.05em solid">0 to 1</span> for memory safety and human retinal contraction.</li></ul><figure id="20b3c1b2-5cc3-4e41-834b-55dafde9b66d"><div class="source"><a href="https://www.tug.org/pracjourn/2007-4/walden/color.pdf">https://www.tug.org/pracjourn/2007-4/walden/color.pdf</a></div></figure><h3 id="47a9606a-b5b3-451e-b06b-596d0f5a92bc" class="">Error analysis in code</h3><p id="dc213257-53b6-4e9c-8622-915ca615dc44" class="block-color-blue_background">Reference: ray tracing in a weekend</p><p id="3fbc4a79-bc56-4362-9f38-dcac271649bc" class="">If the width contains some value, </p><p id="98be02dc-f4f6-4612-ab72-8458bf5881b0" class="block-color-red">error: minimum color value in ppm file is 0.</p><p id="1353a313-be4a-49af-ae72-4298ee8063f1" class="">If the height contains a value rather than 255, white shading occurs. Else if the value is 0:</p><p id="ab5d766b-e1ac-4860-996c-953861d07234" class="block-color-red">error: minimum color value in ppm file is 0.</p><p id="342e00d9-ab75-4d3a-84de-c4fa21a93682" class="">
+</p><pre id="af73f71a-a0ee-439a-afd8-ba501044f315" class="code"><code>std::cout &lt;&lt; &quot;P3\n&quot; &lt;&lt; image_width &lt;&lt; &#x27; &#x27; &lt;&lt; image_height &lt;&lt; &quot;\n255\n&quot;;</code></pre><h1 id="a28a03ec-8ae4-4c8c-b4f1-81ee1ce8a87e" class="">Behavior of rays</h1><p id="974b9681-41be-45ad-a310-a327603b7583" class="">There are many objects, such as those that are reflecting, refracting, transparent, or opaque, that behave differently depending on the scenario. For example, when considering a metallic ball, we can see reflections of other objects on its surface. This occurs when light rays traveling from other objects strike the ball, creating a scene of reflection that is then observed by the viewer.</p><p id="e4ea1a38-4fd7-47dc-b2d8-f9d16b936478" class="">When it comes to opaque objects, light doesn&#x27;t even pass through them.</p><p id="a257751d-731f-4e3f-9995-18180c9be8e9" class="">Some transparent objects absorb the light and will be colored accordingly. </p><ul id="fcbf62b8-8ee3-4915-bdbd-27110b3dc8ac" class="block-color-yellow_background toggle"><li><details open=""><summary>details</summary><p id="02274863-c214-4ac2-8aaa-9d94272dcf40" class="">Consider a transparent object. When we observe the case of water, it exhibits different colors based on the surrounding -[where it has been kept]. If it is in the red-colored bottle, water will also appears red but it doesn&#x27;t mean that it turned completely red. This is due to the transparency of water. light first passes through the observer and then strikes the red bottle. Here the color of the ray changes to red and those rays when passes through the colorless water, will make it appear red.</p><p id="5b9482e3-e956-4e40-bc6b-f8d90ba16420" class="">
+</p><p id="9a59c388-2e95-4f64-92f8-4084899f2ca5" class="">
+</p></details></li></ul><h1 id="1e2b66cf-93c4-4007-865a-38322dd99cbc" class="">Anti-aliasing effects</h1><p id="80cb6fdc-9863-44ab-95d0-d9830e48a7af" class="">When I started looking deep into the core concepts of raytracing, this concept took much time to understand and code eventually. After drawing a simple sphere with some random colored background, the outer surface of the object [edges] seems to be irregular and non-rigid.</p><p id="fa1a58e9-1574-4220-a5e9-5a119e8e6fd0" class="">To avoid such aliasing, some anti-aliasing techniques are used.</p><details open=""><summary style="font-weight:600;font-size:1.25em;line-height:1.3">Why this irregularity occurs?</summary><div class="indented"><p id="bb6ec79c-258d-497a-b9f9-54e57da083b6" class="">Every camera is made up of billions of pixels. We are simply coloring the pixels and creating images. ignoring the middle part of the image, coloring the outer part exactly looks like this. This irregularity can be seen when we zoom the image. They looks like stairsteps. Many scientists also suggested that increasing the number of pixels and decreasing their width will reduce this un-uniformity. But these jaggies are not going to disappear. This concept of dealing with spaces of pixels is referred as <a href="https://en.wikipedia.org/wiki/Spatial_anti-aliasing"><mark class="highlight-purple"><span style="border-bottom:0.05em solid">spatial aliasing</span></mark></a>.</p><figure id="3d559d32-daf3-4cb5-8515-3e4782f220f7" class="image"><a href="Understanding%20a%20ray%20tracer%201015b3b073934f5785d7c5472d48fd1b/color-pixel-art-classic.jpg"><img style="width:242px" src="Understanding%20a%20ray%20tracer%201015b3b073934f5785d7c5472d48fd1b/color-pixel-art-classic.jpg"/></a></figure></div></details><h1 id="5f08d970-6c33-46b8-94e6-632ad65378fa" class="">Supersampling</h1><p id="a2144ad1-bb6c-48da-b0f2-2560cbffe19f" class="">Supersampling is a superior anti-aliasing technique that reduces the aliasing effect. It can be achieved by simply increasing the frequency of the grid or pixel that we want to sample. Consider two spheres of two colors blue and green. If we shoot X number of rays from a camera, some rays will hit the blue sphere and some will hit the green one. Finally, averaging them creates a combination of both colors and yields a corresponding color.</p><p id="dbd20c22-6441-493e-8bd5-9c33dfcd5a30" class="">There is another way to avoid sharp edges: by converting them into smoother ones. The grids that contribute to sharp edges must be blurred so that when we zoom in on the image, the outer parts become blurred and are ultimately anti-aliased.</p><figure id="92832aad-a16b-4041-8190-7c1dbbb83b44" class="image"><a href="Understanding%20a%20ray%20tracer%201015b3b073934f5785d7c5472d48fd1b/anti-aliasing_image_01.png"><img style="width:450px" src="Understanding%20a%20ray%20tracer%201015b3b073934f5785d7c5472d48fd1b/anti-aliasing_image_01.png"/></a></figure><h1 id="45ab5f47-867f-4393-a484-f146c6f47b46" class="">Conclusion</h1><p id="3bf129f4-879e-4661-a1a3-23761186607a" class="">This article explains the basics of ray tracing, including forward and backward ray tracing, determining the color of a ray, and anti-aliasing effects. It also provides resources for further learning and discusses the benefits of understanding the core concepts behind ray tracing for easier coding.</p><p id="1f7579e0-ecd6-412a-8adf-8f572f450cc7" class="">
+</p><p id="5d751b1d-ea45-4e7e-98d0-699c0a190de9" class="">Supersampling</p></div></article></body></html>
